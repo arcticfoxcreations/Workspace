@@ -15,8 +15,14 @@ async function apiFetch(path, opts) {
     ...opts,
     headers: { ...(opts && opts.headers), ...authHeader() }
   });
-  if (res.status === 401) {
-    Auth.promptForPassword();
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try {
+      const body = await res.json();
+      if (body && body.message) msg = body.message;
+    } catch (e) { /* body wasn't JSON, keep generic message */ }
+    if (res.status === 401) Auth.promptForPassword();
+    throw new Error(msg);
   }
   return res;
 }
