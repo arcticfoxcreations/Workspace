@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>workspace</title>
+<meta name="theme-color" content="#0b0b0c" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <i id="starBtn" class="icon-btn" data-icon="star" title="Hide sidebar"></i>
+      <span class="brand">workspace</span>
+    </div>
+    <button id="newSessionBtn" class="btn-ghost btn-block">
+      <i class="icon" data-icon="plus"></i> New session
+    </button>
+    <div class="section-label">sessions</div>
+    <div id="sessionList" class="session-list"></div>
+    <div class="sidebar-bottom">
+      <button id="openSettingsBtn" class="btn-ghost btn-block">
+        <i class="icon" data-icon="settings"></i> Settings
+      </button>
+    </div>
+  </aside>
+
+  <i id="starBtnCollapsed" class="icon-btn floating-star" data-icon="star" title="Show sidebar" style="display:none"></i>
+
+  <main id="main">
+    <header id="headerRow">
+      <div id="modeChips" class="chips">
+        <button class="chip chip-active" data-mode="auto">Auto</button>
+      </div>
+      <i id="settingsIconBtn" class="icon-btn" data-icon="settings" title="Settings"></i>
+    </header>
+
+    <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+    <div id="usageBar" class="usage-bar"></div>
+
+    <form id="composer" class="composer">
+      <label class="attach-btn" title="Attach a file">
+        <i class="icon" data-icon="paperclip"></i>
+        <input type="file" id="fileInput" hidden />
+      </label>
+      <input type="text" id="messageInput" placeholder="hmm, say something..." autocomplete="off" />
+      <button type="submit" class="send-btn" title="Send">
+        <i class="icon" data-icon="send"></i>
+      </button>
+    </form>
+  </main>
+
+  <div id="settingsPanel" class="settings-panel hidden">
+    <div class="settings-header">
+      <span>Settings</span>
+      <i class="icon-btn" data-icon="x" id="closeSettingsBtn"></i>
+    </div>
+    <div class="settings-body" id="settingsBody"></div>
+  </div>
+
+  <div id="overlay" class="overlay hidden"></div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/providers.js"></script>
+<script src="js/router.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
