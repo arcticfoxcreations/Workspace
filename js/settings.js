@@ -64,7 +64,8 @@ const Settings = {
         </div>
         <div class="settings-row">
           <label>Password</label>
-          <input type="password" id="passwordInput" placeholder="workspace password" />
+          <input type="password" id="passwordInput" placeholder="workspace password" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <button type="button" class="small-btn" id="togglePwBtn">show</button>
         </div>
         <button class="small-btn" id="saveConnectionBtn">save connection</button>
       </div>`;
@@ -134,10 +135,18 @@ const Settings = {
   },
 
   wireEvents() {
+    document.getElementById('togglePwBtn').addEventListener('click', () => {
+      const input = document.getElementById('passwordInput');
+      const btn = document.getElementById('togglePwBtn');
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.textContent = showing ? 'show' : 'hide';
+    });
+
     document.getElementById('saveConnectionBtn').addEventListener('click', () => {
       let url = document.getElementById('backendUrlInput').value.trim().replace(/\/$/, '');
       if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
-      const pw = document.getElementById('passwordInput').value;
+      const pw = document.getElementById('passwordInput').value.trim();
       if (url) localStorage.setItem('workspace_backend_url', url);
       if (pw) sessionStorage.setItem('workspace_password', pw);
       const savedNote = pw ? 'URL and password saved' : 'URL saved (password unchanged)';
