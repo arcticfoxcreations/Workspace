@@ -135,11 +135,13 @@ const Settings = {
 
   wireEvents() {
     document.getElementById('saveConnectionBtn').addEventListener('click', () => {
-      const url = document.getElementById('backendUrlInput').value.trim().replace(/\/$/, '');
+      let url = document.getElementById('backendUrlInput').value.trim().replace(/\/$/, '');
+      if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
       const pw = document.getElementById('passwordInput').value;
       if (url) localStorage.setItem('workspace_backend_url', url);
       if (pw) sessionStorage.setItem('workspace_password', pw);
-      alert('Connection saved.');
+      const savedNote = pw ? 'URL and password saved.' : 'URL saved. (Password unchanged - leave blank to keep the current one, or type it again to update it.)';
+      alert(savedNote);
       Settings.render();
     });
 
@@ -163,15 +165,23 @@ const Settings = {
         const label = block.querySelector('.add-label').value.trim();
         const key = block.querySelector('.add-key').value.trim();
         if (!key) return;
-        await Providers.addKey(providerId, label, key);
-        await Settings.render();
+        try {
+          await Providers.addKey(providerId, label, key);
+          await Settings.render();
+        } catch (e) {
+          alert('Could not save key: ' + e.message);
+        }
       });
     });
 
     this.bodyEl.querySelectorAll('[data-action="remove-key"]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await Providers.removeKey(btn.dataset.provider, parseInt(btn.dataset.index, 10));
-        await Settings.render();
+        try {
+          await Providers.removeKey(btn.dataset.provider, parseInt(btn.dataset.index, 10));
+          await Settings.render();
+        } catch (e) {
+          alert('Could not remove key: ' + e.message);
+        }
       });
     });
 
@@ -179,19 +189,24 @@ const Settings = {
       btn.addEventListener('click', async () => {
         const block = btn.closest('.provider-block');
         const model = block.querySelector('.model-input').value.trim();
-        await Providers.setModel(btn.dataset.provider, model);
-        await Settings.render();
+        try {
+          await Providers.setModel(btn.dataset.provider, model);
+          await Settings.render();
+        } catch (e) {
+          alert('Could not save model: ' + e.message);
+        }
       });
     });
 
     this.bodyEl.querySelectorAll('[data-action="refresh-models"]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const result = await Providers.refreshModels(btn.dataset.provider);
-        if (result.error) {
-          alert(result.message || 'Could not fetch model list (add a key first).');
-          return;
+        try {
+          const result = await Providers.refreshModels(btn.dataset.provider);
+          if (result.error) { alert(result.message || 'Could not fetch model list.'); return; }
+          alert('Available models:\n' + result.models.slice(0, 30).join('\n'));
+        } catch (e) {
+          alert('Could not fetch models: ' + e.message);
         }
-        alert('Available models:\n' + result.models.slice(0, 30).join('\n'));
       });
     });
 
