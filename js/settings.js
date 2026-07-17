@@ -37,8 +37,15 @@ const Settings = {
   },
 
   async render() {
-    this.providerDefs = await Providers.list();
-    this.keyInfo = await Providers.getKeyInfo();
+    let connectionError = null;
+    try {
+      this.providerDefs = await Providers.list();
+      this.keyInfo = await Providers.getKeyInfo();
+    } catch (e) {
+      this.providerDefs = {};
+      this.keyInfo = {};
+      connectionError = 'Not connected yet - enter your backend URL and password below, then save.';
+    }
     const nicknames = await DB.getSetting('nicknames', DEFAULT_NICKNAMES);
     const accent = await DB.getSetting('accent', '#7f77dd');
     const fontSize = await DB.getSetting('fontSize', 15);
@@ -50,6 +57,7 @@ const Settings = {
     html += `
       <div class="settings-group">
         <div class="settings-group-title">Connection</div>
+        ${connectionError ? `<div style="font-size:12px;color:#d98a5f;margin-bottom:8px">${connectionError}</div>` : ''}
         <div class="settings-row">
           <label>Backend URL</label>
           <input type="text" id="backendUrlInput" placeholder="https://your-worker.workers.dev" value="${backendUrl}" />
@@ -78,6 +86,9 @@ const Settings = {
 
     // ---- Providers ----
     html += `<div class="settings-group"><div class="settings-group-title">AI providers</div>`;
+    if (Object.keys(this.providerDefs).length === 0) {
+      html += `<div style="font-size:12px;color:var(--text-muted)">Connect your backend above to manage AI keys here.</div>`;
+    }
     for (const [id, def] of Object.entries(this.providerDefs)) {
       const info = this.keyInfo[id] || { keys: [], activeModel: null };
       const badge = def.refill === 'recurring'
