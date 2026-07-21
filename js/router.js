@@ -1,0 +1,132 @@
+// Figures out WHO should answer a message: a specific @mentioned AI,
+// or the auto-routing heuristic across whichever AIs are active.
+
+const DEFAULT_NICKNAMES = {
+  gemini: 'Gemini',
+  groq: 'Groq',
+  openrouter: 'OpenRouter',
+  githubmodels: 'GitHub Models',
+  mistral: 'Mistral',
+  cerebras: 'Cerebras',
+  nvidia: 'NVIDIA',
+  cloudflareai: 'Cloudflare',
+  ovhcloud: 'OVHcloud',
+  anthropic: 'Claude',
+  openai: 'GPT',
+  deepseek: 'DeepSeek'
+};
+
+// Providers that are safe to auto-route to by default (recurring free tiers).
+// Claude/GPT/DeepSeek stay opt-in via @mention since their free access is one-time.
+const DEFAULT_AUTO_PROVIDERS = ['gemini', 'groq', 'openrouter', 'nvidia', 'cloudflareai'];
+
+// Who gets asked to compile an oversized session, in order of preference -
+// biggest context windows / most headroom first. The provider that's
+// currently over its own limit is always skipped, whatever this order says.
+const COMPILE_PROVIDER_PRIORITY = [
+  'gemini', 'anthropic', 'openai', 'deepseek', 'mistral', 'nvidia',
+  'cerebras', 'openrouter', 'githubmodels', 'ovhcloud', 'groq', 'cloudflareai'
+];
+
+const Router = {
+  // Detects "hey X, from now call you Y" / "call you Y" style rename commands.
+  detectRename(text, nicknames) {
+    const renameMatch = text.match(/call\s+you\s+([a-zA-Z0-9_ ]{2,20})/i);
+    if (!renameMatch) return null;
+    // find which provider they were addressing before the rename phrase
+    const before = text.slice(0, renameMatch.index);
+    const target = Router.findMentionedProvider(before, nicknames) || Router.findMentionedProvider(text, nicknames);
+    if (!target) return null;
+    return { providerId: target, newNickname: renameMatch[1].trim() };
+  },
+
+  // Finds a provider id whose nickname is @mentioned in the text.
+  findMentionedProvider(text, nicknames) {
+    const atMatch = text.match(/@([a-zA-Z0-9_]+)/);
+    const needle = atMatch ? atMatch[1].toLowerCase() : null;
+
+    // also allow "hey <nickname>" without the @ symbol, since that's how
+    // people naturally type it
+    const heyMatch = text.match(/\bhey[, ]+([a-zA-Z0-9_]+)/i);
+    const heyNeedle = heyMatch ? heyMatch[1].toLowerCase() : null;
+
+    // and "gemini can you..." / "gemini, go into..." - the nickname leading
+    // the sentence, no "hey" needed
+    const leadMatch = text.match(/^\s*([a-zA-Z0-9_]+)[,]?\s+(can|could|please|do|go|switch|would|will)\b/i);
+    const leadNeedle = leadMatch ? leadMatch[1].toLowerCase() : null;
+
+    for (const [id, nick] of Object.entries(nicknames)) {
+      const n = nick.toLowerCase().replace(/\s+/g, '');
+      if (needle && n === needle) return id;
+      if (heyNeedle && n === heyNeedle) return id;
+      if (leadNeedle && n === leadNeedle) return id;
+    }
+    return null;
+  },
+
+  // Lets a chat mode be switched by just typing it, e.g. "gemini can u go in
+  // research mode and do this..." - no need to click the mode chip.
+  detectModeCommand(text) {
+    const t = (text || '').toLowerCase();
+    if (/\bresearch\s+mode\b/.test(t) || /\bgo\s+(into|in)\s+research\b/.test(t)) return 'research';
+    if (/\bquick\s+mode\b/.test(t)) return 'quick';
+    if (/\btest\s+(me\s+)?mode\b/.test(t) || /\bquiz\s+me\b/.test(t)) return 'test';
+    if (/\bnormal\s+mode\b/.test(t) || /\bcasual\s+mode\b/.test(t)) return 'normal';
+    if (/\boutline\s+mode\b/.test(t) || /\bmake\s+an?\s+outline\b/.test(t)) return 'outline';
+    if (/\bcompare\s+mode\b/.test(t) || /\bcompare\s+(and\s+contrast|approaches|sources)\b/.test(t)) return 'compare';
+    if (/\bexplain\s+(simply|it\s+simply|like\s+i'?m\s+5|eli5)\b/.test(t) || /\bexplain\s+mode\b/.test(t)) return 'explain';
+    return null;
+  },
+
+  // Very light heuristic - no extra API call, just keyword matching.
+  guessBestForTask(text) {
+    const t = text.toLowerCase();
+    const codeWords = ['code', 'bug', 'error', 'function', 'python', 'javascript', 'debug',
+      'syntax', 'algorithm', 'compile', 'stack trace', 'exception', 'refactor'];
+    const researchWords = ['research', 'source', 'cite', 'latest', 'according to', 'news',
+      'current', 'study', 'paper', 'statistics'];
+
+    if (codeWords.some(w => t.includes(w))) return ['groq', 'nvidia'];
+    if (researchWords.some(w => t.includes(w))) return ['gemini'];
+    return ['gemini'];
+  },
+
+  // Main entry point: given the raw message + current settings, decide who answers.
+  resolveTargets(text, { nicknames, mode, autoProviders }) {
+    const mentioned = Router.findMentionedProvider(text, nicknames);
+    if (mentioned) return { targets: [mentioned], isManualMention: true };
+
+    const lineup = (autoProviders && autoProviders.length) ? autoProviders : DEFAULT_AUTO_PROVIDERS;
+
+    if (mode === 'auto') {
+      const guess = Router.guessBestForTask(text).filter(id => lineup.includes(id));
+      return { targets: guess.length ? guess : [lineup[0]], isManualMention: false };
+    }
+    // manual mode with no mention falls back to whatever's marked active
+    return { targets: [lineup[0]], isManualMention: false };
+  },
+
+  // A "hard problem" nudge for coding-heavy asks, per the plan we agreed on.
+  looksLikeHardProblem(text) {
+    const t = text.toLowerCase();
+    const hardSignals = ['not working and i don\'t know why', 'architecture', 'refactor the whole',
+      'multi-file', 'race condition', 'memory leak', 'been stuck'];
+    return hardSignals.some(w => t.includes(w)) || text.length > 600;
+  },
+
+  // Turns a raw provider model id into something readable in the UI.
+  // e.g. "meta-llama/llama-3.1-8b-instruct:free" -> "Llama 3.1 8B (free)"
+  prettifyModelName(id) {
+    if (!id) return id;
+    let s = id.split('/').pop();
+    const isFree = /:free$/.test(s);
+    s = s.replace(/:free$/, '');
+    s = s.replace(/^@cf\//, '');
+    s = s.replace(/[-_]/g, ' ');
+    s = s.replace(/\binstruct\b/gi, '').replace(/\bfp8\b/gi, '').replace(/\bfast\b/gi, '');
+    s = s.replace(/\b(\d+)b\b/gi, '$1B');
+    s = s.replace(/\s+/g, ' ').trim();
+    s = s.replace(/\b\w/g, c => c.toUpperCase());
+    return isFree ? `${s} (free)` : s;
+  }
+};

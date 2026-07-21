@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>workspace</title>
+<meta name="theme-color" content="#0b0b0c" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600&family=Comfortaa:wght@400;600&family=Roboto+Condensed:wght@400;500&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <i id="starBtn" class="icon-btn" data-icon="star" title="Hide sidebar"></i>
+      <span class="brand">workspace</span>
+      <span class="sidebar-top-tools">
+        <i id="sidebarSearchBtn" class="icon-btn" data-icon="search" title="Search all sessions (Ctrl+Shift+F)"></i>
+        <i id="sidebarPinnedBtn" class="icon-btn" data-icon="pin" title="Pinned messages (Ctrl+Shift+P)"></i>
+      </span>
+    </div>
+    <button id="newSessionBtn" class="btn-ghost btn-block">
+      <i class="icon" data-icon="plus"></i> New session
+    </button>
+    <div class="section-label">sessions</div>
+    <div id="sessionList" class="session-list"></div>
+    <div class="sidebar-bottom">
+      <div id="usageBar" class="usage-bar sidebar-usage-bar"></div>
+      <button id="openSettingsBtn" class="btn-ghost btn-block">
+        <i class="icon" data-icon="settings"></i> Settings
+      </button>
+      <button id="openConsoleBtn" class="btn-ghost btn-block">
+        <i class="icon" data-icon="bolt"></i> Console
+      </button>
+    </div>
+  </aside>
+
+  <div id="sidebarHoverZone"></div>
+  <i id="starBtnCollapsed" class="icon-btn floating-star" data-icon="star" title="Show sidebar" style="display:none"></i>
+
+  <main id="main">
+    <header id="headerRow">
+      <div id="modeChips" class="chips">
+        <button class="chip chip-active" data-mode="auto">Auto</button>
+      </div>
+      <i id="profileBtn" class="icon-btn" data-icon="user" title="Your profile"></i>
+    </header>
+
+    <div class="chat-log-wrap">
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+      <button id="scrollBottomBtn" class="scroll-bottom-btn hidden" title="Jump to latest">
+        <i class="icon" data-icon="arrowDown"></i>
+      </button>
+    </div>
+
+    <div id="attachmentBar" class="attachment-bar hidden"></div>
+
+    <form id="composer" class="composer">
+      <label class="attach-btn" title="Attach files">
+        <i class="icon" data-icon="paperclip"></i>
+        <input type="file" id="fileInput" hidden multiple />
+      </label>
+      <i id="micBtn" class="icon-btn attach-btn" data-icon="mic" title="Voice input"></i>
+      <textarea id="messageInput" rows="1" placeholder="hmm, say something..."></textarea>
+      <button type="submit" class="send-btn" title="Send">
+        <i class="icon" data-icon="send"></i>
+      </button>
+    </form>
+  </main>
+
+  <div id="settingsPanel" class="settings-panel hidden">
+    <div class="settings-header">
+      <span>Settings</span>
+      <i class="icon-btn" data-icon="x" id="closeSettingsBtn"></i>
+    </div>
+    <div class="settings-body" id="settingsBody"></div>
+  </div>
+
+  <div id="profilePanel" class="settings-panel profile-panel hidden"></div>
+
+  <div id="commandPalette" class="command-palette hidden"></div>
+  <div id="genericModal" class="command-palette hidden"></div>
+
+  <div id="overlay" class="overlay hidden"></div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/logger.js"></script>
+<script src="js/db.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/providers.js"></script>
+<script src="js/router.js"></script>
+<script src="js/fileHandler.js"></script>
+<script src="js/fileViewer.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
+<script src="js/console.js"></script>
+</body>
+</html>
