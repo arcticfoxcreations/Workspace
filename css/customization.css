@@ -1,0 +1,70 @@
+/* ---------------------------------------------------------------------
+   customization.css
+   Everything added in this round lives here, not in style.css, so it can
+   be swapped or reverted on its own - see the comment in index.html.
+   Every effect here is off/neutral by default and only activates once a
+   setting actually turns it on, so nothing changes visually until you
+   touch these controls in Settings -> Appearance -> Personalize.
+--------------------------------------------------------------------- */
+
+/* ---- sidebar blur / transparency ---- */
+/* --sidebar-blur (px) and --sidebar-opacity (0-1) are set inline on
+   :root by settings.js. Defaults here match the old solid sidebar
+   exactly, so doing nothing = old behavior. */
+:root {
+  --sidebar-blur: 0px;
+  --sidebar-opacity: 1;
+}
+#sidebar {
+  background: color-mix(in srgb, var(--bg-1) calc(var(--sidebar-opacity) * 100%), transparent);
+  backdrop-filter: blur(var(--sidebar-blur));
+  -webkit-backdrop-filter: blur(var(--sidebar-blur));
+}
+
+/* ---- chat bubble shape ---- */
+/* Applied as a class on #app: bubble-shape-sharp | bubble-shape-rounded
+   (default, matches existing look) | bubble-shape-pill */
+#app.bubble-shape-sharp .bubble { border-radius: 4px; }
+#app.bubble-shape-pill .bubble { border-radius: 20px; }
+
+/* ---- chat bubble fill ---- */
+/* bubble-fill-solid (default) | bubble-fill-outline | bubble-fill-glass */
+#app.bubble-fill-outline .msg.user .bubble,
+#app.bubble-fill-outline .msg.ai .bubble {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+}
+#app.bubble-fill-glass .msg.user .bubble,
+#app.bubble-fill-glass .msg.ai .bubble {
+  background: color-mix(in srgb, var(--bg-2) 42%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 0.5px solid color-mix(in srgb, var(--line-strong) 60%, transparent);
+}
+
+/* ---- ultra-compact density ---- */
+/* A level tighter than the existing "compact" - for people who want as
+   much on screen as possible. */
+#app.density-ultra-compact .chat-log { gap: 5px; padding: 8px; }
+#app.density-ultra-compact .bubble { padding: 6px 10px; font-size: calc(var(--app-font-size, 15px) - 1px); }
+#app.density-ultra-compact .session-item { padding: 5px 8px; }
+
+/* ---- per-session accent override ---- */
+/* When a session has its own accent color saved, app.js sets
+   --session-accent on #main for the duration of that session; falls
+   back to the global --accent everywhere this isn't set. */
+#main[style*="--session-accent"] .chip-active,
+#main[style*="--session-accent"] .send-btn {
+  background: var(--session-accent, var(--accent));
+}
+#main[style*="--session-accent"] .auto-live-dot {
+  background: var(--session-accent, var(--accent));
+}
+
+/* ---- custom empty-chat placeholder ---- */
+/* Just a subtle visual tell that this greeting is yours, not the
+   rotating default - the actual text swap happens in app.js. */
+.empty-state[data-custom="1"] .empty-state-greeting {
+  border-left: 2px solid var(--accent);
+  padding-left: 10px;
+}
