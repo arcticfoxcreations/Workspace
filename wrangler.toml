@@ -1,0 +1,29 @@
+name = "ai-workspace-backend"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+kv_namespaces = [
+  { binding = "WORKSPACE_KV", id = "REPLACE_WITH_YOUR_KV_ID" }
+]
+
+# Powers the "Cloudflare AI" provider - free, no API key needed, uses your
+# Cloudflare account's built-in Workers AI allowance.
+[ai]
+binding = "AI"
+
+# ---- OPTIONAL: R2 for synced attachments --------------------------------------
+# Without this, synced files live in KV (1 GB free total, and every file upload
+# counts toward KV's 1,000 free writes/day). With an R2 bucket, attachments go
+# there instead (10 GB free; R2 must be enabled on your Cloudflare account first
+# - see README-DEPLOY.md). Create a bucket, then uncomment:
+#
+# r2_buckets = [
+#   { binding = "WORKSPACE_R2", bucket_name = "ai-workspace-files" }
+# ]
+
+# ---- OPTIONAL: only answer browsers from your own site -------------------------
+# [vars]
+# ALLOWED_ORIGIN = "https://arcticfoxcreations.github.io"
+
+# Secrets (NOT in this file - set in the dashboard or `wrangler secret put`):
+#   APP_PASSWORD   your master PIN / password (letters, numbers, symbols all fine)

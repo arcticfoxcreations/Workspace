@@ -1,0 +1,11 @@
+{
+  "name": "ai-workspace-tests",
+  "private": true,
+  "type": "module",
+  "description": "Optional integration tests. Not needed to deploy. Run: npm install && npm test",
+  "scripts": {
+    "test": "node worker.test.mjs && node sync.test.mjs",
+    "test:timeouts": "node timeout.test.mjs"
+  },
+  "devDependencies": { "fake-indexeddb": "^6.2.5", "jsdom": "^30.1.0", "miniflare": "^4.20260730.0" }
+}
